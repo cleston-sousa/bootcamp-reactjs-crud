@@ -27,30 +27,34 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     async function loadFoods(): Promise<void> {
-      // TODO LOAD FOODS
+      const foodList = await api.get('foods');
+      setFoods(foodList.data);
     }
-
     loadFoods();
   }, []);
 
   async function handleAddFood(
     food: Omit<IFoodPlate, 'id' | 'available'>,
   ): Promise<void> {
-    try {
-      // TODO ADD A NEW FOOD PLATE TO THE API
-    } catch (err) {
-      console.log(err);
-    }
+    const toAddFood = Object.assign(food, { available: false });
+    const resp = await api.post('/foods', toAddFood);
+    setFoods([...foods, resp.data]);
   }
 
   async function handleUpdateFood(
     food: Omit<IFoodPlate, 'id' | 'available'>,
   ): Promise<void> {
-    // TODO UPDATE A FOOD PLATE ON THE API
+    const toUptFood = Object.assign(food, { available: editingFood.available });
+    await api.put(`/foods/${editingFood.id}`, toUptFood);
+
+    const foodIdx = foods.findIndex(item => item.id === editingFood.id);
+    const updatedFood = Object.assign(foods[foodIdx], toUptFood);
+    setFoods(foods.splice(foodIdx, 1, updatedFood));
   }
 
   async function handleDeleteFood(id: number): Promise<void> {
-    // TODO DELETE A FOOD PLATE FROM THE API
+    setFoods(foods.filter(item => item.id !== id));
+    await api.delete(`/foods/${id}`);
   }
 
   function toggleModal(): void {
@@ -62,7 +66,8 @@ const Dashboard: React.FC = () => {
   }
 
   function handleEditFood(food: IFoodPlate): void {
-    // TODO SET THE CURRENT EDITING FOOD ID IN THE STATE
+    setEditingFood(food);
+    toggleEditModal();
   }
 
   return (
